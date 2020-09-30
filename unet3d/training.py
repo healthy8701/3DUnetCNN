@@ -75,8 +75,11 @@ def train_model(model, model_file, training_generator, validation_generator, ste
     :param n_epochs: Total number of epochs to train the model.
     :return: 
     """
+    model.summary()
     model.fit_generator(generator=training_generator,
                         steps_per_epoch=steps_per_epoch,
+                        workers=0,
+                        use_multiprocessing=True,
                         epochs=n_epochs,
                         validation_data=validation_generator,
                         validation_steps=validation_steps,

@@ -13,13 +13,14 @@ from unet3d.utils.utils import pickle_dump
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_file")
-    parser.add_argument("--data_file", default="./BraTS2020_Validation_data.h5")
+    parser.add_argument("--data_file", default="test_data.h5")
     parser.add_argument("--labels", nargs="*")
     parser.add_argument("--modalities", nargs="*")
-    parser.add_argument("--validation_file", default="./BraTS2020_Validation_ids.pkl")
+    parser.add_argument("--validation_file", default="validation_ids.pkl")
     parser.add_argument("--no_label_map", action="store_true", default=False)
-    parser.add_argument("--prediction_dir", default="./BraTS2020_Validation_predictions")
+    parser.add_argument("--prediction_dir", default="../test_data")
     parser.add_argument("--output_basename", default="{subject}.nii.gz")
+    parser.add_argument("--validate_path", default="../../../dataset/MRI_brain_seg/test")
     return parser.parse_args()
 
 
@@ -33,8 +34,21 @@ def main():
                 config["training_modalities"] = value
             else:
                 config[key] = value
-    filenames, subject_ids = fetch_brats_2020_files(config["training_modalities"], group="Validation",
-                                                    include_truth=False, return_subject_ids=True)
+                
+    validate_path = kwargs["validate_path"]
+    subject_ids = list()
+    filenames = list()
+    blacklist = []
+    for root, dirs, files in os.walk(validate_path):
+        for f in files:
+            subject_id = f.split('.')[0]
+            if subject_id not in blacklist:
+                subject_ids.append(subject_id)
+                subject_files = list()
+                subject_files.append(validate_path+'/'+f)
+                filenames.append(tuple(subject_files))
+            
+                
     if not os.path.exists(config["data_file"]):
         write_data_to_file(filenames, config["data_file"], image_shape=config["image_shape"],
                            subject_ids=subject_ids, save_truth=False)
@@ -57,7 +71,6 @@ def main():
         pred = nib.load(prediction_filename)
         pred_resampled = resample_to_img(pred, ref, interpolation="nearest")
         pred_resampled.to_filename(prediction_filename)
-
 
 if __name__ == "__main__":
     main()

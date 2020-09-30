@@ -27,6 +27,7 @@ def write_image_data_to_file(image_files, data_storage, truth_storage, image_sha
             _label_indices = len(set_of_files) - 1
         else:
             _label_indices = label_indices
+            
         images = reslice_image_set(set_of_files, image_shape, label_indices=_label_indices, crop=crop)
         subject_data = [image.get_data() for image in images]
         add_data_to_storage(data_storage, truth_storage, affine_storage, subject_data, images[0].affine, n_channels,
